@@ -30,9 +30,17 @@ COPY --from=nginx /etc/nginx/scgi_params /etc/nginx/scgi_params
 COPY --from=nginx /etc/nginx/uwsgi_params /etc/nginx/uwsgi_params
 COPY --from=nginx /var/log/nginx /var/log/nginx
 
-# Create required directories for Nginx
+# Copy WordPress files to the web root
+COPY --from=wordpress /usr/src/wordpress/ /var/www/html/
+
+# Create required directories for Nginx and PHP-FPM
 RUN mkdir -p /var/cache/nginx /run/nginx \
-    && chown -R www-data:www-data /var/log/nginx /var/cache/nginx /run/nginx
+    && chown -R www-data:www-data /var/log/nginx /var/cache/nginx /run/nginx \
+    && chmod 755 /var/cache/nginx /run/nginx \
+    # Ensure www-data group exists and nginx user is part of it
+    && usermod -aG www-data nginx || true \
+    # Set WordPress directory permissions
+    && chown -R www-data:www-data /var/www/html
 
 # Copy Supervisor configuration
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
@@ -42,9 +50,11 @@ RUN curl -o /tmp/redis-cache.zip https://downloads.wordpress.org/plugin/redis-ca
     && unzip /tmp/redis-cache.zip -d /usr/src/wordpress/wp-content/plugins/ \
     && rm /tmp/redis-cache.zip
 
-# Create a test file to check web server access
-RUN echo "<?php phpinfo(); ?>" > /usr/src/wordpress/info.php \
-    && echo "<html><body><h1>Nginx Test Page</h1><p>If you see this, Nginx is working!</p></body></html>" > /usr/src/wordpress/test.html
+# Create test files to check web server access
+RUN echo "<?php phpinfo(); ?>" > /var/www/html/info.php \
+    && echo "<html><body><h1>Nginx Test Page</h1><p>If you see this, Nginx is working!</p></body></html>" > /var/www/html/test.html \
+    && echo "<?php echo 'PHP is working!'; ?>" > /var/www/html/test.php \
+    && chown www-data:www-data /var/www/html/info.php /var/www/html/test.html /var/www/html/test.php
 
 # Copy custom entry point script
 COPY entrypoint.sh /usr/local/bin/custom-entrypoint.sh
