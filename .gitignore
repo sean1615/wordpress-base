@@ -1,0 +1,36 @@
+# Docker related files
+docker-compose.yml
+docker-compose.*.yml
+.env
+*.env
+
+# Local configuration files
+mariadb.cnf
+mysql*.cnf
+
+# WordPress content
+wp-content/
+wp-data/
+
+# Logs
+logs/
+*.log
+
+# Cache
+.cache/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# IDE specific
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
